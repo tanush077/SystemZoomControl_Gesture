@@ -3,33 +3,31 @@ import mediapipe as mp
 import pyautogui
 import screeninfo
 
-wCam,hCam = 1280,720
+screen = screeninfo.get_monitors()[0]
+width, height = screen.width, screen.height
 
-cap = cv2.VideoCapture(0)
-cap.set(3,wCam)
-cap.set(4,hCam)
-
-def move_mouse(x, y, width, height):
+def move_mouse(x, y):
     tx = int(x * width)
     ty = int(y * height)
-    invx = width - tx
-    pyautogui.moveTo(invx, ty)
+    pyautogui.moveTo(tx, ty)
 
 def track_finger():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands()
-    screen = screeninfo.get_monitors()[0]
-    width, height = screen.width, screen.height
+
+    cap = cv2.VideoCapture(0)
 
     while True:
         success, img = cap.read()
-        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        img = cv2.flip(img, 1)
+
         results = hands.process(img)
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
-                index_l = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
-                x, y = index_l.x, index_l.y
-                move_mouse(x, y, width, height)
+                i_l = hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
+                x, y = i_l.x, i_l.y
+                move_mouse(x, y)
 
         cv2.imshow('Finger Tracking', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
